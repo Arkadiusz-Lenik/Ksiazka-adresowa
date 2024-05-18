@@ -14,6 +14,17 @@ struct Uzytkownik
     string haslo = "";
 };
 
+struct Adresat
+{
+    int idAdresata = 0;
+    int idUzytkownika = 0;
+    string imie = "";
+    string nazwisko = "";
+    string numerTelefonu = "";
+    string email = "";
+    string adres = "";
+};
+
 string wczytajLinie()
 {
     string wejscie = "";
@@ -106,6 +117,29 @@ void zapiszWszystkichUzytkownikowDoPliku(vector <Uzytkownik> &uzytkownicy)
         plik << itr->haslo << "|" << endl;
 
     }
+
+    plik.close();
+}
+
+void zapiszNowegoAdresataDoPliku(vector <Adresat> &adresaci)
+{
+    fstream plik;
+    plik.open ("Adresaci.txt", ios::app);
+
+    if (plik.good() == false)
+    {
+        cout << "Nie udalo sie otworzyc pliku Adresaci.txt i zapisac w nim danych" << endl;
+        Sleep(3000);
+        return;
+    }
+
+    plik << adresaci.back().idAdresata << "|";
+    plik << adresaci.back().idUzytkownika << "|";
+    plik << adresaci.back().imie << "|";
+    plik << adresaci.back().nazwisko << "|";
+    plik << adresaci.back().numerTelefonu << "|";
+    plik << adresaci.back().email << "|";
+    plik << adresaci.back().adres << "|" << endl;
 
     plik.close();
 }
@@ -227,11 +261,82 @@ void zmienHaslo(vector <Uzytkownik> &uzytkownicy, int idZalogowanegoUzytkownika)
     zapiszWszystkichUzytkownikowDoPliku(uzytkownicy);
 }
 
+string zweryfikujWprowadzonyNumerTelefonu(Adresat osoba, vector <Adresat> &adresaci)
+{
+    string numerTelefonu = osoba.numerTelefonu;
+    vector <Adresat> :: iterator itr = adresaci.begin();
+
+    while (itr != adresaci.end())
+    {
+        if (itr->numerTelefonu == numerTelefonu)
+        {
+            cout << endl << "Podany numer telefonu jest juz zajety. Sprobuj ponownie" << endl;
+            numerTelefonu = wczytajLinie();
+            itr = adresaci.begin();
+        }
+        else
+        {
+            itr++;
+        }
+    }
+
+    return numerTelefonu;
+}
+
+string zweryfikujWprowadzonyEmail(Adresat osoba, vector <Adresat> &adresaci)
+{
+    string email = osoba.email;
+    vector <Adresat> :: iterator itr = adresaci.begin();
+
+    while (itr != adresaci.end())
+    {
+        if (itr->email == email)
+        {
+            cout << endl << "Podany email jest juz zajety. Sprobuj ponownie" << endl;
+            email = wczytajLinie();
+            itr = adresaci.begin();
+        }
+        else
+        {
+            itr++;
+        }
+    }
+
+    return email;
+}
+
+void dodajAdresata(vector <Adresat> &adresaci, int idZalogowanegoUzytkownika)
+{
+    Adresat osoba;
+
+    cout << endl << "Prosze podac imie: ";
+    osoba.imie = wczytajLinie();
+    cout << "Prosze podac nazwisko: ";
+    osoba.nazwisko = wczytajLinie();
+    cout << "Prosze podac numer telefonu: ";
+    osoba.numerTelefonu = wczytajLinie();
+    cout << "Prosze podac adres email: ";
+    osoba.email = wczytajLinie();
+    cout << "Prosze podac adres: ";
+    osoba.adres = wczytajLinie();
+
+    osoba.numerTelefonu = zweryfikujWprowadzonyNumerTelefonu(osoba, adresaci);
+    osoba.email = zweryfikujWprowadzonyEmail(osoba, adresaci);
+
+    osoba.idAdresata = adresaci.empty()? 1 : adresaci.back().idAdresata + 1;
+    osoba.idUzytkownika = idZalogowanegoUzytkownika;
+    adresaci.push_back(osoba);
+    zapiszNowegoAdresataDoPliku(adresaci);
+    cout << "Adresat zostal dodany" << endl << endl;
+    Sleep(1000);
+}
+
 int main()
 {
     int idZalogowanegoUzytkownika = 0;
     char wybor;
     vector <Uzytkownik> uzytkownicy;
+    vector <Adresat> adresaci;
 
     wczytajUzytkownikowZPliku(uzytkownicy);
 
@@ -256,15 +361,17 @@ int main()
         else if (idZalogowanegoUzytkownika > 0)
         {
             system("cls");
-            cout << "1. Zmiana hasla" << endl;
-            cout << "2. Wylogowanie" << endl;
+            cout << "1. Dodaj adresata" << endl;
+            cout << "2. Zmiana hasla" << endl;
+            cout << "3. Wylogowanie" << endl;
 
             wybor = wczytajZnak();
 
             switch (wybor)
             {
-                case '1': zmienHaslo(uzytkownicy, idZalogowanegoUzytkownika); break;
-                case '2': idZalogowanegoUzytkownika = 0; break;
+                case '1': dodajAdresata(adresaci, idZalogowanegoUzytkownika); break;
+                case '2': zmienHaslo(uzytkownicy, idZalogowanegoUzytkownika); break;
+                case '3': idZalogowanegoUzytkownika = 0; break;
             }
         }
 
