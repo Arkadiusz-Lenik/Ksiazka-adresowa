@@ -56,7 +56,51 @@ char wczytajZnak()
     return znak;
 }
 
-Uzytkownik rozdzielLinieZPlikuNapojedynczeDane(string liniaZPliku)
+int wczytajLiczbeCalkowita()
+{
+    string wejscie = "";
+    int liczba = 0;
+
+    while (true)
+    {
+        getline(cin, wejscie);
+        stringstream myStream(wejscie);
+
+        if (myStream >> liczba)
+        {
+            break;
+        }
+
+        cout << "To nie jest liczba. Sprobuj ponownie" << endl;
+    }
+
+    return liczba;
+}
+
+char wczytajZnakPotwierdzajacy()
+{
+    string wejscie = "";
+    char znak;
+
+    while (true)
+    {
+        getline(cin, wejscie);
+
+        if (wejscie == "t" || wejscie == "n")
+        {
+            znak = wejscie[0];
+            break;
+        }
+        else
+        {
+            cout << "Wprowadzono niewlasciwy znak. Sprobuj ponownie" << endl;
+        }
+    }
+
+    return znak;
+}
+
+Uzytkownik rozdzielLinieZPlikuUzytkownicyNapojedynczeDane(string liniaZPliku)
 {
     stringstream mySentence(liniaZPliku);
     string fragmentDanych = "";
@@ -72,6 +116,33 @@ Uzytkownik rozdzielLinieZPlikuNapojedynczeDane(string liniaZPliku)
             case 1: osoba.idUzytkownika = stoi(fragmentDanych); break;
             case 2: osoba.nazwa = fragmentDanych; break;
             case 3: osoba.haslo = fragmentDanych; break;
+        }
+        numerKolumnyDanychZPliku++;
+    }
+
+    return osoba;
+}
+
+Adresat rozdzielLinieZPlikuAdresaciNapojedynczeDane(string liniaZPliku)
+{
+    stringstream mySentence(liniaZPliku);
+    string fragmentDanych = "";
+    int numerKolumnyDanychZPliku = 1;
+    Adresat osoba;
+
+    while (!mySentence.eof())
+    {
+        getline(mySentence, fragmentDanych, '|');
+
+        switch(numerKolumnyDanychZPliku)
+        {
+            case 1: osoba.idAdresata = stoi(fragmentDanych); break;
+            case 2: osoba.idUzytkownika = stoi(fragmentDanych); break;
+            case 3: osoba.imie = fragmentDanych; break;
+            case 4: osoba.nazwisko = fragmentDanych; break;
+            case 5: osoba.numerTelefonu = fragmentDanych; break;
+            case 6: osoba.email = fragmentDanych; break;
+            case 7: osoba.adres = fragmentDanych; break;
         }
         numerKolumnyDanychZPliku++;
     }
@@ -144,6 +215,32 @@ void zapiszNowegoAdresataDoPliku(vector <Adresat> &adresaci)
     plik.close();
 }
 
+void zapiszWszystkichAdresatowDoPliku(vector <Adresat> &adresaci)
+{
+    fstream plik;
+    plik.open ("Adresaci.txt", ios::out);
+
+    if (plik.good() == false)
+    {
+        cout << "Nie udalo sie otworzyc pliku Adresaci.txt i zapisac w nim danych" << endl;
+        Sleep(3000);
+        return;
+    }
+
+    for (vector <Adresat> :: iterator itr = adresaci.begin(); itr != adresaci.end(); itr++)
+    {
+        plik << itr->idAdresata << "|";
+        plik << itr->idUzytkownika << "|";
+        plik << itr->imie << "|";
+        plik << itr->nazwisko << "|";
+        plik << itr->numerTelefonu << "|";
+        plik << itr->email << "|";
+        plik << itr->adres << "|" << endl;
+    }
+
+    plik.close();
+}
+
 void wczytajUzytkownikowZPliku(vector <Uzytkownik> &uzytkownicy)
 {
     string liniaZPliku = "";
@@ -161,8 +258,33 @@ void wczytajUzytkownikowZPliku(vector <Uzytkownik> &uzytkownicy)
 
     while (getline(plik, liniaZPliku))
     {
-        osoba = rozdzielLinieZPlikuNapojedynczeDane(liniaZPliku);
+        osoba = rozdzielLinieZPlikuUzytkownicyNapojedynczeDane(liniaZPliku);
         uzytkownicy.push_back(osoba);
+        liniaZPliku.clear();
+    }
+
+    plik.close();
+}
+
+void wczytajAdresatowZPliku(vector <Adresat> &adresaci)
+{
+    string liniaZPliku = "";
+    Adresat osoba;
+
+    fstream plik;
+    plik.open("Adresaci.txt", ios::in);
+
+    if (plik.good() == false)
+    {
+        cout << "Nie udalo sie otworzyc pliku Adresaci.txt i odczytac z niego danych" << endl;
+        Sleep(3000);
+        return;
+    }
+
+    while (getline(plik, liniaZPliku))
+    {
+        osoba = rozdzielLinieZPlikuAdresaciNapojedynczeDane(liniaZPliku);
+        adresaci.push_back(osoba);
         liniaZPliku.clear();
     }
 
@@ -331,6 +453,41 @@ void dodajAdresata(vector <Adresat> &adresaci, int idZalogowanegoUzytkownika)
     Sleep(1000);
 }
 
+void usunAdresata(vector <Adresat> &adresaci, int idZalogowanegoUzytkownika)
+{
+    int idDoUsuniecia = 0;
+    char potwierdzenieUsuniecia;
+
+    cout << endl << "Podaj nr ID adresata ktorego chcesz usunac: ";
+    idDoUsuniecia = wczytajLiczbeCalkowita();
+    cout << "Czy potwierdzasz usuniecie wskazanego adresata? (t/n)" << endl;
+    potwierdzenieUsuniecia = wczytajZnakPotwierdzajacy();
+
+    if (potwierdzenieUsuniecia == 'n')
+    {
+        return;
+    }
+
+    for (vector <Adresat> :: iterator itr = adresaci.begin(); itr != adresaci.end(); itr++)
+    {
+        if (itr->idUzytkownika == idZalogowanegoUzytkownika && itr->idAdresata == idDoUsuniecia)
+        {
+            adresaci.erase(itr);
+            cout << "Wskazany adresat zostal usuniety"  << endl;
+            Sleep(3000);
+            break;
+        }
+        else if (itr->idAdresata == adresaci.back().idAdresata)
+        {
+            cout << "Wskazany adresat nie widnieje w ksiazce adresowej" << endl;
+            Sleep(3000);
+            return;
+        }
+    }
+
+    zapiszWszystkichAdresatowDoPliku(adresaci);
+}
+
 int main()
 {
     int idZalogowanegoUzytkownika = 0;
@@ -339,6 +496,7 @@ int main()
     vector <Adresat> adresaci;
 
     wczytajUzytkownikowZPliku(uzytkownicy);
+    wczytajAdresatowZPliku(adresaci);
 
     while (1)
     {
@@ -362,16 +520,18 @@ int main()
         {
             system("cls");
             cout << "1. Dodaj adresata" << endl;
-            cout << "2. Zmiana hasla" << endl;
-            cout << "3. Wylogowanie" << endl;
+            cout << "2. Usun adresata" << endl;
+            cout << "3. Zmiana hasla" << endl;
+            cout << "4. Wylogowanie" << endl;
 
             wybor = wczytajZnak();
 
             switch (wybor)
             {
                 case '1': dodajAdresata(adresaci, idZalogowanegoUzytkownika); break;
-                case '2': zmienHaslo(uzytkownicy, idZalogowanegoUzytkownika); break;
-                case '3': idZalogowanegoUzytkownika = 0; break;
+                case '2': usunAdresata(adresaci, idZalogowanegoUzytkownika); break;
+                case '3': zmienHaslo(uzytkownicy, idZalogowanegoUzytkownika); break;
+                case '4': idZalogowanegoUzytkownika = 0; break;
             }
         }
 
