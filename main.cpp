@@ -56,7 +56,28 @@ char wczytajZnak()
     return znak;
 }
 
-Uzytkownik rozdzielLinieZPlikuNapojedynczeDane(string liniaZPliku)
+int wczytajLiczbeCalkowita()
+{
+    string wejscie = "";
+    int liczba = 0;
+
+    while (true)
+    {
+        getline(cin, wejscie);
+        stringstream myStream(wejscie);
+
+        if (myStream >> liczba)
+        {
+            break;
+        }
+
+        cout << "To nie jest liczba. Sprobuj ponownie" << endl;
+    }
+
+    return liczba;
+}
+
+Uzytkownik rozdzielLinieZPlikuUzytkownicyNapojedynczeDane(string liniaZPliku)
 {
     stringstream mySentence(liniaZPliku);
     string fragmentDanych = "";
@@ -72,6 +93,33 @@ Uzytkownik rozdzielLinieZPlikuNapojedynczeDane(string liniaZPliku)
             case 1: osoba.idUzytkownika = stoi(fragmentDanych); break;
             case 2: osoba.nazwa = fragmentDanych; break;
             case 3: osoba.haslo = fragmentDanych; break;
+        }
+        numerKolumnyDanychZPliku++;
+    }
+
+    return osoba;
+}
+
+Adresat rozdzielLinieZPlikuAdresaciNapojedynczeDane(string liniaZPliku)
+{
+    stringstream mySentence(liniaZPliku);
+    string fragmentDanych = "";
+    int numerKolumnyDanychZPliku = 1;
+    Adresat osoba;
+
+    while (!mySentence.eof())
+    {
+        getline(mySentence, fragmentDanych, '|');
+
+        switch(numerKolumnyDanychZPliku)
+        {
+            case 1: osoba.idAdresata = stoi(fragmentDanych); break;
+            case 2: osoba.idUzytkownika = stoi(fragmentDanych); break;
+            case 3: osoba.imie = fragmentDanych; break;
+            case 4: osoba.nazwisko = fragmentDanych; break;
+            case 5: osoba.numerTelefonu = fragmentDanych; break;
+            case 6: osoba.email = fragmentDanych; break;
+            case 7: osoba.adres = fragmentDanych; break;
         }
         numerKolumnyDanychZPliku++;
     }
@@ -144,6 +192,32 @@ void zapiszNowegoAdresataDoPliku(vector <Adresat> &adresaci)
     plik.close();
 }
 
+void zapiszWszystkichAdresatowDoPliku(vector <Adresat> &adresaci)
+{
+    fstream plik;
+    plik.open ("Adresaci.txt", ios::out);
+
+    if (plik.good() == false)
+    {
+        cout << "Nie udalo sie otworzyc pliku Adresaci.txt i zapisac w nim danych" << endl;
+        Sleep(3000);
+        return;
+    }
+
+    for (vector <Adresat> :: iterator itr = adresaci.begin(); itr != adresaci.end(); itr++)
+    {
+        plik << itr->idAdresata << "|";
+        plik << itr->idUzytkownika << "|";
+        plik << itr->imie << "|";
+        plik << itr->nazwisko << "|";
+        plik << itr->numerTelefonu << "|";
+        plik << itr->email << "|";
+        plik << itr->adres << "|" << endl;
+    }
+
+    plik.close();
+}
+
 void wczytajUzytkownikowZPliku(vector <Uzytkownik> &uzytkownicy)
 {
     string liniaZPliku = "";
@@ -161,8 +235,33 @@ void wczytajUzytkownikowZPliku(vector <Uzytkownik> &uzytkownicy)
 
     while (getline(plik, liniaZPliku))
     {
-        osoba = rozdzielLinieZPlikuNapojedynczeDane(liniaZPliku);
+        osoba = rozdzielLinieZPlikuUzytkownicyNapojedynczeDane(liniaZPliku);
         uzytkownicy.push_back(osoba);
+        liniaZPliku.clear();
+    }
+
+    plik.close();
+}
+
+void wczytajAdresatowZPliku(vector <Adresat> &adresaci)
+{
+    string liniaZPliku = "";
+    Adresat osoba;
+
+    fstream plik;
+    plik.open("Adresaci.txt", ios::in);
+
+    if (plik.good() == false)
+    {
+        cout << "Nie udalo sie otworzyc pliku Adresaci.txt i odczytac z niego danych" << endl;
+        Sleep(3000);
+        return;
+    }
+
+    while (getline(plik, liniaZPliku))
+    {
+        osoba = rozdzielLinieZPlikuAdresaciNapojedynczeDane(liniaZPliku);
+        adresaci.push_back(osoba);
         liniaZPliku.clear();
     }
 
@@ -331,6 +430,85 @@ void dodajAdresata(vector <Adresat> &adresaci, int idZalogowanegoUzytkownika)
     Sleep(1000);
 }
 
+void wyswietlPodmenuModyfikacji()
+{
+    cout << endl << "Wybierz dane ktore chcesz zmodyfikowac: " << endl;
+    cout << "1 - imie" << endl;
+    cout << "2 - nazwisko" << endl;
+    cout << "3 - numer telefonu" << endl;
+    cout << "4 - email" << endl;
+    cout << "5 - adres" << endl;
+    cout << "6 - powrot do menu" << endl;
+}
+
+void edytujAdresata(vector <Adresat> &adresaci, int idZalogowanegoUzytkownika)
+{
+    Adresat osoba;
+    int idDoModyfikacji = 0, wyborDanychDoModyfikacji = 0;
+    bool czyIstniejeWskazanaOsoba = false;
+
+    cout << endl << "Podaj nr ID adresata ktorego chcesz zmodyfikowac: ";
+    idDoModyfikacji = wczytajLiczbeCalkowita();
+
+    for (vector <Adresat> :: iterator itr = adresaci.begin(); itr != adresaci.end(); itr++)
+    {
+        if (itr->idUzytkownika == idZalogowanegoUzytkownika  && itr->idAdresata == idDoModyfikacji)
+        {
+            czyIstniejeWskazanaOsoba = true;
+            wyswietlPodmenuModyfikacji();
+            wyborDanychDoModyfikacji = wczytajLiczbeCalkowita();
+            switch (wyborDanychDoModyfikacji)
+            {
+                case 1:
+                    cout << endl << "Prosze podac nowe imie: ";
+                    (*itr).imie = wczytajLinie();
+                    cout << endl << "Imie zostalo zmienione" << endl;
+                    Sleep(3000);
+                    break;
+                case 2:
+                    cout << endl << "Prosze podac nowe nazwisko: ";
+                    (*itr).nazwisko = wczytajLinie();
+                    cout << endl << "Nazwisko zostalo zmienione" << endl;
+                    Sleep(3000);
+                    break;
+                case 3:
+                    cout << endl << "Prosze podac nowy numer telefonu: ";
+                    osoba.numerTelefonu = wczytajLinie();
+                    (*itr).numerTelefonu = zweryfikujWprowadzonyNumerTelefonu(osoba, adresaci);
+                    cout << endl << "Numer telefonu zostal zmieniony" << endl;
+                    Sleep(3000);
+                    break;
+                case 4:
+                    cout << endl << "Prosze podac nowy email: ";
+                    osoba.email = wczytajLinie();
+                    (*itr).email = zweryfikujWprowadzonyEmail(osoba, adresaci);
+                    cout << endl << "Email zostal zmieniony" << endl;
+                    Sleep(3000);
+                    break;
+                case 5:
+                    cout << endl << "Prosze podac nowy adres: ";
+                    (*itr).adres = wczytajLinie();
+                    cout << endl << "Adres zostal zmieniony" << endl;
+                    Sleep(3000);
+                    break;
+                case 6:
+                    cout << endl << "Powrot do menu glownego" << endl;
+                    Sleep(3000);
+                    return;
+            }
+
+        }
+        else if ((itr->idAdresata == adresaci.back().idAdresata) && czyIstniejeWskazanaOsoba == false)
+        {
+            cout << "Wskazany adresat nie widnieje w ksiazce adresowej" << endl;
+            Sleep(3000);
+            return;
+        }
+    }
+
+    zapiszWszystkichAdresatowDoPliku(adresaci);
+}
+
 int main()
 {
     int idZalogowanegoUzytkownika = 0;
@@ -339,6 +517,7 @@ int main()
     vector <Adresat> adresaci;
 
     wczytajUzytkownikowZPliku(uzytkownicy);
+    wczytajAdresatowZPliku(adresaci);
 
     while (1)
     {
@@ -362,16 +541,18 @@ int main()
         {
             system("cls");
             cout << "1. Dodaj adresata" << endl;
-            cout << "2. Zmiana hasla" << endl;
-            cout << "3. Wylogowanie" << endl;
+            cout << "2. Edytuj adresata" << endl;
+            cout << "3. Zmiana hasla" << endl;
+            cout << "4. Wylogowanie" << endl;
 
             wybor = wczytajZnak();
 
             switch (wybor)
             {
                 case '1': dodajAdresata(adresaci, idZalogowanegoUzytkownika); break;
-                case '2': zmienHaslo(uzytkownicy, idZalogowanegoUzytkownika); break;
-                case '3': idZalogowanegoUzytkownika = 0; break;
+                case '2': edytujAdresata(adresaci, idZalogowanegoUzytkownika); break;
+                case '3': zmienHaslo(uzytkownicy, idZalogowanegoUzytkownika); break;
+                case '4': idZalogowanegoUzytkownika = 0; break;
             }
         }
 
