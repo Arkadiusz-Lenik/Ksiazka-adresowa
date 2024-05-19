@@ -77,6 +77,29 @@ int wczytajLiczbeCalkowita()
     return liczba;
 }
 
+char wczytajZnakPotwierdzajacy()
+{
+    string wejscie = "";
+    char znak;
+
+    while (true)
+    {
+        getline(cin, wejscie);
+
+        if (wejscie == "t" || wejscie == "n")
+        {
+            znak = wejscie[0];
+            break;
+        }
+        else
+        {
+            cout << "Wprowadzono niewlasciwy znak. Sprobuj ponownie" << endl;
+        }
+    }
+
+    return znak;
+}
+
 Uzytkownik rozdzielLinieZPlikuUzytkownicyNapojedynczeDane(string liniaZPliku)
 {
     stringstream mySentence(liniaZPliku);
@@ -594,6 +617,41 @@ void edytujAdresata(vector <Adresat> &adresaci, int idZalogowanegoUzytkownika)
     zapiszWszystkichAdresatowDoPliku(adresaci);
 }
 
+void usunAdresata(vector <Adresat> &adresaci, int idZalogowanegoUzytkownika)
+{
+    int idDoUsuniecia = 0;
+    char potwierdzenieUsuniecia;
+
+    cout << endl << "Podaj nr ID adresata ktorego chcesz usunac: ";
+    idDoUsuniecia = wczytajLiczbeCalkowita();
+    cout << "Czy potwierdzasz usuniecie wskazanego adresata? (t/n)" << endl;
+    potwierdzenieUsuniecia = wczytajZnakPotwierdzajacy();
+
+    if (potwierdzenieUsuniecia == 'n')
+    {
+        return;
+    }
+
+    for (vector <Adresat> :: iterator itr = adresaci.begin(); itr != adresaci.end(); itr++)
+    {
+        if (itr->idUzytkownika == idZalogowanegoUzytkownika && itr->idAdresata == idDoUsuniecia)
+        {
+            adresaci.erase(itr);
+            cout << "Wskazany adresat zostal usuniety"  << endl;
+            Sleep(3000);
+            break;
+        }
+        else if (itr->idAdresata == adresaci.back().idAdresata)
+        {
+            cout << "Wskazany adresat nie widnieje w ksiazce adresowej" << endl;
+            Sleep(3000);
+            return;
+        }
+    }
+
+    zapiszWszystkichAdresatowDoPliku(adresaci);
+}
+
 int main()
 {
     int idZalogowanegoUzytkownika = 0;
@@ -629,9 +687,10 @@ int main()
             cout << "2. Wyszukaj po imieniu" << endl;
             cout << "3. Wyszukaj po nazwisku" << endl;
             cout << "4. Wyswietl wszystkich adresatow" << endl;
-            cout << "5. Edytuj adresata" << endl;
-            cout << "6. Zmiana hasla" << endl;
-            cout << "7. Wylogowanie" << endl;
+            cout << "5. Usun adresata" << endl;
+            cout << "6. Edytuj adresata" << endl;
+            cout << "7. Zmiana hasla" << endl;
+            cout << "8. Wylogowanie" << endl;
 
             wybor = wczytajZnak();
 
@@ -641,9 +700,10 @@ int main()
                 case '2': wyszukajPoImieniu(adresaci, idZalogowanegoUzytkownika); break;
                 case '3': wyszukajPoNazwisku(adresaci, idZalogowanegoUzytkownika); break;
                 case '4': wyswietlWszystkichAdresatow(adresaci, idZalogowanegoUzytkownika); break;
-                case '5': edytujAdresata(adresaci, idZalogowanegoUzytkownika); break;
-                case '6': zmienHaslo(uzytkownicy, idZalogowanegoUzytkownika); break;
-                case '7': idZalogowanegoUzytkownika = 0; break;
+                case '5': usunAdresata(adresaci, idZalogowanegoUzytkownika); break;
+                case '6': edytujAdresata(adresaci, idZalogowanegoUzytkownika); break;
+                case '7': zmienHaslo(uzytkownicy, idZalogowanegoUzytkownika); break;
+                case '8': idZalogowanegoUzytkownika = 0; break;
             }
         }
 
