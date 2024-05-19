@@ -56,7 +56,7 @@ char wczytajZnak()
     return znak;
 }
 
-Uzytkownik rozdzielLinieZPlikuNapojedynczeDane(string liniaZPliku)
+Uzytkownik rozdzielLinieZPlikuUzytkownicyNapojedynczeDane(string liniaZPliku)
 {
     stringstream mySentence(liniaZPliku);
     string fragmentDanych = "";
@@ -72,6 +72,33 @@ Uzytkownik rozdzielLinieZPlikuNapojedynczeDane(string liniaZPliku)
             case 1: osoba.idUzytkownika = stoi(fragmentDanych); break;
             case 2: osoba.nazwa = fragmentDanych; break;
             case 3: osoba.haslo = fragmentDanych; break;
+        }
+        numerKolumnyDanychZPliku++;
+    }
+
+    return osoba;
+}
+
+Adresat rozdzielLinieZPlikuAdresaciNapojedynczeDane(string liniaZPliku)
+{
+    stringstream mySentence(liniaZPliku);
+    string fragmentDanych = "";
+    int numerKolumnyDanychZPliku = 1;
+    Adresat osoba;
+
+    while (!mySentence.eof())
+    {
+        getline(mySentence, fragmentDanych, '|');
+
+        switch(numerKolumnyDanychZPliku)
+        {
+            case 1: osoba.idAdresata = stoi(fragmentDanych); break;
+            case 2: osoba.idUzytkownika = stoi(fragmentDanych); break;
+            case 3: osoba.imie = fragmentDanych; break;
+            case 4: osoba.nazwisko = fragmentDanych; break;
+            case 5: osoba.numerTelefonu = fragmentDanych; break;
+            case 6: osoba.email = fragmentDanych; break;
+            case 7: osoba.adres = fragmentDanych; break;
         }
         numerKolumnyDanychZPliku++;
     }
@@ -161,8 +188,33 @@ void wczytajUzytkownikowZPliku(vector <Uzytkownik> &uzytkownicy)
 
     while (getline(plik, liniaZPliku))
     {
-        osoba = rozdzielLinieZPlikuNapojedynczeDane(liniaZPliku);
+        osoba = rozdzielLinieZPlikuUzytkownicyNapojedynczeDane(liniaZPliku);
         uzytkownicy.push_back(osoba);
+        liniaZPliku.clear();
+    }
+
+    plik.close();
+}
+
+void wczytajAdresatowZPliku(vector <Adresat> &adresaci)
+{
+    string liniaZPliku = "";
+    Adresat osoba;
+
+    fstream plik;
+    plik.open("Adresaci.txt", ios::in);
+
+    if (plik.good() == false)
+    {
+        cout << "Nie udalo sie otworzyc pliku Adresaci.txt i odczytac z niego danych" << endl;
+        Sleep(3000);
+        return;
+    }
+
+    while (getline(plik, liniaZPliku))
+    {
+        osoba = rozdzielLinieZPlikuAdresaciNapojedynczeDane(liniaZPliku);
+        adresaci.push_back(osoba);
         liniaZPliku.clear();
     }
 
@@ -331,6 +383,91 @@ void dodajAdresata(vector <Adresat> &adresaci, int idZalogowanegoUzytkownika)
     Sleep(1000);
 }
 
+void wyswietlWszystkichAdresatow(vector <Adresat> &adresaci, int idZalogowanegoUzytkownika)
+{
+    if (adresaci.empty())
+    {
+        cout << endl;
+        cout << "Ksiazka adresowa jest pusta" << endl;
+    }
+
+    for (vector <Adresat> :: iterator itr = adresaci.begin(); itr != adresaci.end(); itr++)
+    {
+        if (itr->idUzytkownika == idZalogowanegoUzytkownika)
+        {
+            cout << endl;
+            cout << "ID: " << itr->idAdresata << endl;
+            cout << "Imie: " << itr->imie << endl;
+            cout << "Nazwisko: " << itr->nazwisko << endl;
+            cout << "Telefon: " << itr->numerTelefonu << endl;
+            cout << "Email: " << itr->email << endl;
+            cout << "Adres: " << itr->adres << endl;
+        }
+    }
+
+    cin.get();
+}
+
+void wyszukajPoImieniu(vector <Adresat> &adresaci, int idZalogowanegoUzytkownika)
+{
+    string imie = "";
+    int licznikWystapien = 0;
+
+    cout << endl << "Podaj imie osoby do wyszukania: ";
+    imie = wczytajLinie();
+
+    for (vector <Adresat> :: iterator itr = adresaci.begin(); itr != adresaci.end(); itr++)
+    {
+        if (itr->idUzytkownika == idZalogowanegoUzytkownika && itr->imie == imie)
+        {
+            cout << endl;
+            cout << "ID: " << itr->idAdresata << endl;
+            cout << "Imie: " << itr->imie << endl;
+            cout << "Nazwisko: " << itr->nazwisko << endl;
+            cout << "Telefon: " << itr->numerTelefonu << endl;
+            cout << "Email: " << itr->email << endl;
+            cout << "Adres: " << itr->adres << endl;
+            licznikWystapien++;
+        }
+    }
+
+    if (licznikWystapien == 0)
+    {
+        cout << endl << "Podane imie nie istnieje w zestawieniu" << endl;
+    }
+    cin.get();
+}
+
+void wyszukajPoNazwisku(vector <Adresat> &adresaci, int idZalogowanegoUzytkownika)
+{
+    string nazwisko = "";
+    int licznikWystapien = 0;
+
+    cout << endl << "Podaj nazwisko osoby do wyszukania: ";
+    nazwisko = wczytajLinie();
+
+    for (vector <Adresat> :: iterator itr = adresaci.begin(); itr != adresaci.end(); itr++)
+    {
+        if (itr->idUzytkownika == idZalogowanegoUzytkownika && itr->nazwisko == nazwisko)
+        {
+            cout << endl;
+            cout << "ID: " << itr->idAdresata << endl;
+            cout << "Imie: " << itr->imie << endl;
+            cout << "Nazwisko: " << itr->nazwisko << endl;
+            cout << "Telefon: " << itr->numerTelefonu << endl;
+            cout << "Email: " << itr->email << endl;
+            cout << "Adres: " << itr->adres << endl;
+            licznikWystapien++;
+        }
+    }
+
+    if (licznikWystapien == 0)
+    {
+        cout << endl << "Podane nazwisko nie istnieje w zestawieniu" << endl;
+    }
+    cin.get();
+}
+
 int main()
 {
     int idZalogowanegoUzytkownika = 0;
@@ -339,6 +476,7 @@ int main()
     vector <Adresat> adresaci;
 
     wczytajUzytkownikowZPliku(uzytkownicy);
+    wczytajAdresatowZPliku(adresaci);
 
     while (1)
     {
@@ -362,16 +500,22 @@ int main()
         {
             system("cls");
             cout << "1. Dodaj adresata" << endl;
-            cout << "2. Zmiana hasla" << endl;
-            cout << "3. Wylogowanie" << endl;
+            cout << "2. Wyszukaj po imieniu" << endl;
+            cout << "3. Wyszukaj po nazwisku" << endl;
+            cout << "4. Wyswietl wszystkich adresatow" << endl;
+            cout << "5. Zmiana hasla" << endl;
+            cout << "6. Wylogowanie" << endl;
 
             wybor = wczytajZnak();
 
             switch (wybor)
             {
                 case '1': dodajAdresata(adresaci, idZalogowanegoUzytkownika); break;
-                case '2': zmienHaslo(uzytkownicy, idZalogowanegoUzytkownika); break;
-                case '3': idZalogowanegoUzytkownika = 0; break;
+                case '2': wyszukajPoImieniu(adresaci, idZalogowanegoUzytkownika); break;
+                case '3': wyszukajPoNazwisku(adresaci, idZalogowanegoUzytkownika); break;
+                case '4': wyswietlWszystkichAdresatow(adresaci, idZalogowanegoUzytkownika); break;
+                case '5': zmienHaslo(uzytkownicy, idZalogowanegoUzytkownika); break;
+                case '6': idZalogowanegoUzytkownika = 0; break;
             }
         }
 
